@@ -1,0 +1,35 @@
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Dati generati dallo scraping (rigenerabili rilanciando gli script)
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+venv/
+env/
+.venv/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Log e file temporanei
+*.log
+debug_*.html
+*.tmp
+*.json
