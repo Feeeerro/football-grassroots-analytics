@@ -1,4 +1,4 @@
-# ASI — Appetibility Score Index
+# Football Grassroots Analytics
 
 ### A data-driven player scoring system for Italian lower-league football scouting
 
