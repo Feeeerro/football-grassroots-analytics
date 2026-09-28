@@ -1,4 +1,4 @@
-# ASI — Appetibility Score Index
+# Football Grassroots Analytics
 
 ### A data-driven player scoring system for Italian lower-league football scouting
 
@@ -176,15 +176,6 @@ final normalization keeps ratings within the 0–100 range.
 
 - Python 3.10 or higher
 - The Playwright browser binaries (`playwright install`)
-
-### Installation
-
-```bash
-git clone https://github.com/<your-username>/asi-serie-d.git
-cd asi-serie-d
-pip install -r requirements.txt
-playwright install chromium
-```
 
 ### Usage
 
