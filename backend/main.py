@@ -86,11 +86,11 @@ def list_players(
                p.position,
                p.date_of_birth,
                sc.final_score,
-               (SELECT t.name
+               (SELECT COALESCE(t.name, st.team_name)
                   FROM player_stats st
-                  JOIN teams t ON t.team_id = st.team_id
+                  LEFT JOIN teams t ON t.team_id = st.team_id
                  WHERE st.player_id = p.player_id
-                   AND st.team_id IS NOT NULL
+                   AND COALESCE(t.name, st.team_name) IS NOT NULL
                    AND st.season LIKE '%/%'
                  ORDER BY st.season DESC, st.total_minutes DESC
                  LIMIT 1) AS team
@@ -139,7 +139,8 @@ def player_profile(player_id: int):
         """
         SELECT st.season,
                st.competition,
-               t.name AS team,
+               -- team_id c'e' solo per la Serie D: altrimenti nome dalla pagina
+               COALESCE(t.name, st.team_name) AS team,
                st.appearances,
                st.gol,
                st.assist,

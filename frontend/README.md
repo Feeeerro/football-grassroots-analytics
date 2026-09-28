@@ -19,7 +19,12 @@ variabile `VITE_API_BASE_URL` (vedi `.env.example`).
 
 Se il backend non abilita CORS per `http://localhost:5173`, imposta
 `VITE_API_BASE_URL=/api`: il dev server di Vite inoltra `/api/*` a
-`http://localhost:8000/*` (proxy in `vite.config.js`).
+`http://127.0.0.1:8000/*` (proxy in `vite.config.js`, target modificabile con
+`API_PROXY_TARGET`).
+
+Un **502** con `VITE_API_BASE_URL=/api` significa che il proxy non raggiunge il
+backend: controlla che sia avviato e in ascolto sull'indirizzo di
+`API_PROXY_TARGET` (il terminale di `npm run dev` mostra `http proxy error`).
 
 ## Viste
 
