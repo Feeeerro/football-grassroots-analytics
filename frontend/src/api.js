@@ -26,7 +26,13 @@ async function request(path, { params, signal } = {}) {
     } catch {
       // corpo non JSON: ignora
     }
-    const error = new Error(detail || `Errore ${response.status} dall'API.`);
+    const unreachable = [502, 503, 504].includes(response.status);
+    const error = new Error(
+      detail ||
+        (unreachable
+          ? `L'API non e' raggiungibile (errore ${response.status}). Verifica che il backend sia avviato.`
+          : `Errore ${response.status} dall'API.`)
+    );
     error.status = response.status;
     throw error;
   }

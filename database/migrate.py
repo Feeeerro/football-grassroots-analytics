@@ -1,6 +1,9 @@
 import sqlite3
 import json
 import os
+import re
+import unicodedata
+from difflib import get_close_matches
 from schema import create_database
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # cartella di migrate.py (database/)
@@ -35,7 +38,19 @@ def migrate_teams(cursor, data):
                   parse_text(name))
             )
 
-def migrate_players(cursor, team, name_to_id):
+def normalize_team_name(name):
+    """Chiave di confronto per i nomi squadra: il nome nella pagina del
+    giocatore (title del logo) e quello nelle classifiche possono differire
+    per maiuscole, spazi (anche non separabili), apostrofi o punteggiatura."""
+    if not name:
+        return None
+    name = unicodedata.normalize("NFKC", name)
+    name = name.replace("\u2019", "'").replace("\u2018", "'").replace("`", "'")
+    name = name.replace(".", "").replace("-", " ")
+    name = re.sub(r"\s+", " ", name)
+    return name.strip().casefold() or None
+
+def migrate_players(cursor, team, name_to_id, unresolved):
     """ Iterates all the players """
     for player in team["squad"]:
         cursor.execute("""
@@ -55,6 +70,7 @@ def migrate_players(cursor, team, name_to_id):
     for player_id, player_data in team["completed"].items():
         for season in player_data["stats"]:
             team_id = None
+<<<<<<< HEAD
             if "Serie D" in season["competition"]:
                 team_id = name_to_id.get(season["team"])
             cursor.execute("""
@@ -67,6 +83,24 @@ def migrate_players(cursor, team, name_to_id):
                   parse_text(season["competition"]),
                   parse_int(season["appearances"]),
                   parse_int(season.get("gol")),
+=======
+            team_name = parse_text(season["team"])
+            if "Serie D" in season["competition"] and team_name:
+                team_id = name_to_id.get(normalize_team_name(team_name))
+                if team_id is None:
+                    unresolved[team_name] = unresolved.get(team_name, 0) + 1
+            cursor.execute("""
+            INSERT INTO player_stats
+            (player_id, team_id, team_name, season, competition, appearances, gol, assist, gol_conceded, clean_sheet, yellow_cards, double_yellow_cards, red_cards, total_minutes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (parse_int(player_id), 
+                  parse_int(team_id), 
+                  team_name,
+                  parse_text(season["season"]), 
+                  parse_text(season["competition"]), 
+                  parse_int(season["appearances"]), 
+                  parse_int(season.get("gol")), 
+>>>>>>> 1f4b269471fcf4a6a2edcaa826bcd26abdff346e
                   parse_int(season.get("assist")),
                   parse_int(season.get("gol_conceded")),
                   parse_int(season.get("clean_sheet")),
@@ -116,6 +150,22 @@ def parse_minutes(value):
     if not value or value == "-":
         return None
     return int(value.rstrip("'"))
+<<<<<<< HEAD
+=======
+        
+def report_unresolved(unresolved, teams):
+    """Stampa i nomi squadra di stagioni di Serie D senza team_id: quelle
+    stagioni restano senza contesto di classifica nel punteggio."""
+    if not unresolved:
+        print("Squadre Serie D: tutti i nomi risolti.")
+        return
+    known = [name for team_data in teams.values() for name in team_data["names"]]
+    print(f"ATTENZIONE - {len(unresolved)} nomi squadra Serie D non risolti:")
+    for name, count in sorted(unresolved.items(), key=lambda kv: -kv[1]):
+        guess = get_close_matches(name, known, n=1, cutoff=0.6)
+        hint = f"  (forse: {guess[0]})" if guess else ""
+        print(f"  - {name!r}: {count} stagioni{hint}")
+>>>>>>> 1f4b269471fcf4a6a2edcaa826bcd26abdff346e
 
 def main():
     create_database(DB_PATH)
@@ -128,18 +178,26 @@ def main():
     migrate_teams(cursor, teams)
 
     name_to_id = {
-                name: team_id
+                normalize_team_name(name): team_id
                 for team_id, team_data in teams.items()
                 for name in team_data["names"]
     }
+<<<<<<< HEAD
 
     """ Iterates all the squads file from data/row/squads """
+=======
+    unresolved = {}
+    
+    """ Iterates all the squads file from data/squads """
+>>>>>>> 1f4b269471fcf4a6a2edcaa826bcd26abdff346e
     for filename in os.listdir(SQUADS_DIR):
         if filename.endswith(".json"):
             filepath = os.path.join(SQUADS_DIR, filename)
             with open(filepath, "r", encoding="utf-8") as f:
                 team = json.load(f)
-            migrate_players(cursor, team, name_to_id)
+            migrate_players(cursor, team, name_to_id, unresolved)
+
+    report_unresolved(unresolved, teams)
 
     """ Open JSON file with the seried history """
     with open(os.path.join(HISTORY_DIR, "seried_history.json"), "r", encoding="utf-8") as f:
