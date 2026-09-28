@@ -15,7 +15,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 DATA_DIR = BASE_DIR / "data"
-RAW_DIR = DATA_DIR / "raw"
+RAW_DIR = DATA_DIR / "row"
 SQUADS_DIR = RAW_DIR / "squads"
 HISTORY_DIR = RAW_DIR / "history"
 DB_PATH = DATA_DIR / "seried.db"

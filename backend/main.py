@@ -139,7 +139,7 @@ def player_profile(player_id: int):
         """
         SELECT st.season,
                st.competition,
-               t.name AS team,
+               COALESCE(t.name, st.team_name) AS team,   -- nome collegato, altrimenti quello grezzo
                st.appearances,
                st.gol,
                st.assist,
