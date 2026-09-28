@@ -2,3 +2,7 @@ node_modules/
 dist/
 .env
 .env.local
+
+# Il .gitignore della root ignora *.json: questi vanno versionati.
+!package.json
+!package-lock.json
