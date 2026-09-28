@@ -110,10 +110,12 @@ def run(conn, position):
 
     # confeziona e calcola
     score_fn = make_midfield_score_fn(bench, ctx_data, off_data, position)
-    raw = {
-        pid: player_asi(seasons, score_fn)
-        for pid, seasons in players.items()
-    }
+    raw = {}
+    season_detail = {}
+    for pid, seasons in players.items():
+        final_score, season_scores = player_asi(seasons, score_fn)
+        raw[pid] = final_score
+        season_detail[pid] = season_scores
 
     # normalizzazione come rete di sicurezza (solo se qualcuno supera 100)
     asi_max = max(raw.values()) if raw else 1.0
@@ -121,12 +123,12 @@ def run(conn, position):
         scores = {pid: (v / asi_max) * 100 for pid, v in raw.items()}
     else:
         scores = dict(raw)
-    return scores, players
+    return scores, season_detail, players
 
 
 if __name__ == "__main__":
     conn = sqlite3.connect(DB_PATH)
-    scores, players = run(conn, "Mediano")
+    scores, season_detail, players = run(conn, "Mediano")
     conn.close()
 
     for pid, score in sorted(scores.items(), key=lambda x: x[1], reverse=True)[:100]:

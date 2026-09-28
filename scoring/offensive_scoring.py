@@ -97,10 +97,12 @@ def run(conn, position):
     quote_bench = build_quote_benchmark(players, mean_quote)
 
     score_fn = make_offensive_score_fn(bench, mean_quote, quote_bench, position)
-    raw = {
-        pid: player_asi(seasons, score_fn)
-        for pid, seasons in players.items()
-    }
+    raw = {}
+    season_detail = {}
+    for pid, seasons in players.items():
+        final_score, season_scores = player_asi(seasons, score_fn)
+        raw[pid] = final_score
+        season_detail[pid] = season_scores
 
     # normalizzazione finale 0-100 sul massimo osservato
     asi_max = max(raw.values()) if raw else 1.0
@@ -109,12 +111,12 @@ def run(conn, position):
     else:
         scores = dict(raw)
 
-    return scores, players
+    return scores, season_detail, players
 
 
 if __name__ == "__main__":
     conn = sqlite3.connect(DB_PATH)
-    scores, players = run(conn, "Punta centrale")
+    scores, season_detail, players = run(conn, "Punta centrale")
     conn.close()
 
     for pid, score in sorted(scores.items(), key=lambda x: x[1], reverse=True)[:100]:

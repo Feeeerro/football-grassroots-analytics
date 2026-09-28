@@ -13,12 +13,19 @@ def player_asi(seasons, score_fn):
     anno_recente = anno_di(seasons[0]["season"])
 
     dati = []
+    season_scores = []
     minuti_totali = 0
     for s in seasons:
         grezzo = score_fn(s)                                  # un solo argomento
         finale = grezzo * league_mult(s["competition"]) * 100
         eta = anno_recente - anno_di(s["season"])
+
         dati.append((finale, eta))
+        season_scores.append({
+            "season": s["season"],
+            "competition": s["competition"],
+            "score": round(finale, 1),
+        })
         minuti_totali += s["total_minutes"] or 0
 
     dati.sort(key=lambda x: x[0], reverse=True)
@@ -30,7 +37,8 @@ def player_asi(seasons, score_fn):
         den += w
 
     volume_fact = min(1.0, minuti_totali / VOLUME_CAP)
-    return (num / den) * volume_fact if den else 0.0
+    final_score = (num / den) * volume_fact if den else 0.0
+    return final_score, season_scores
 
 def league_mult(competition):
     if not competition:
