@@ -25,12 +25,13 @@ DB_PATH = DATA_DIR / "seried.db"
 C_SHRINK = 10          # smoothing quota: sotto ~10 gol-squadra non ci si fida
 K_BONUS = 0.15         # tetto del bonus contesto (offensivo e difensivo)
 LAMBDA_QUALITA = 0.8   # peso decrescente per stagioni ordinate per qualita'
-LAMBDA_TEMPO = 0.9     # attenuazione dolce delle stagioni lontane
+LAMBDA_TEMPO = 0.8     # attenuazione dolce delle stagioni lontane
 VOLUME_CAP = 8000      # minuti totali per "piena valutabilita'" (~3 stagioni)
 
 MIDFIELD_ALPHA = {
     "Mediano": 0.5,
-    "Centrocampista centrale": 0.5,
+    "Centrocampista": 0.5,
+    "Centrocampo": 0.5,
     "Ala destra": 0.5,
     "Ala sinistra": 0.5,
 }
