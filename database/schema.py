@@ -40,6 +40,7 @@ def create_database(dbpath):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             player_id INTEGER,
             team_id INTEGER,
+            team_name TEXT,
             season TEXT,
             competition TEXT,
             appearances INTEGER,
@@ -56,6 +57,10 @@ def create_database(dbpath):
         );
     """
     cursor.execute(stats)
+    # DB creati prima dell'aggiunta di team_name: aggiunge la colonna mancante.
+    columns = {row[1] for row in cursor.execute("PRAGMA table_info(player_stats)")}
+    if "team_name" not in columns:
+        cursor.execute("ALTER TABLE player_stats ADD COLUMN team_name TEXT")
     standings = """
         CREATE TABLE IF NOT EXISTS standings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
