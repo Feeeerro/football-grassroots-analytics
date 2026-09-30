@@ -1,6 +1,28 @@
 # ASI Scouting — Frontend
 
-Interfaccia web (Vite + React) per consultare i punteggi ASI prodotti dal backend.
+Interfaccia web (Vite + React) per consultare i punteggi ASI. Legge i dati da
+file JSON statici: non serve nessun server API.
+
+## Dati
+
+I file stanno in `public/data/` e si generano dalla root del progetto:
+
+```bash
+python export_static.py
+```
+
+| File | Contenuto | Quando viene caricato |
+|---|---|---|
+| `roles.json` | posizioni per il filtro | apertura della lista |
+| `players.json` | tutti i giocatori, ordinati per punteggio | apertura della lista, una volta sola |
+| `profiles.json` | tutti i profili, `{ "id": profilo }` | primo profilo aperto, poi dalla cache |
+
+Filtro per posizione e ricerca per nome avvengono nel browser. Gli URL sono
+costruiti con `import.meta.env.BASE_URL`, quindi l'app funziona anche sotto un
+sotto-percorso (es. `npx vite build --base=/nome-repo/` per GitHub Pages).
+
+Nota: `public/data/` e' esclusa da git dalla regola `data/` del `.gitignore`
+della root, quindi i JSON vanno generati prima della build.
 
 ## Avvio
 
@@ -10,25 +32,11 @@ npm install
 npm run dev      # http://localhost:5173
 ```
 
-Il backend deve essere attivo su `http://localhost:8000`.
-
-## Configurazione
-
-La base URL dell'API sta in `src/config.js` e si puo' sovrascrivere con la
-variabile `VITE_API_BASE_URL` (vedi `.env.example`).
-
-Se il backend non abilita CORS per `http://localhost:5173`, imposta
-`VITE_API_BASE_URL=/api`: il dev server di Vite inoltra `/api/*` a
-`http://127.0.0.1:8000/*` (proxy in `vite.config.js`, target modificabile con
-`API_PROXY_TARGET`).
-
-Un **502** con `VITE_API_BASE_URL=/api` significa che il proxy non raggiunge il
-backend: controlla che sia avviato e in ascolto sull'indirizzo di
-`API_PROXY_TARGET` (il terminale di `npm run dev` mostra `http proxy error`).
-
 ## Viste
 
 - `/` — griglia dei giocatori con filtro per posizione e ricerca per nome
-  (i filtri restano nell'URL); paginazione "Carica altri" da 50.
-- `/players/:id` — anagrafica, punteggio ASI e tabella delle stagioni
-  (clean sheet e gol subiti solo per i portieri).
+  (i filtri restano nell'URL); paginazione "Carica altri" da 50. Ogni card
+  mostra il punteggio ASI e, piu' in piccolo, quello dell'ultima stagione
+  valutata.
+- `/players/:id` — anagrafica, punteggio ASI, ultima stagione valutata e
+  tabella delle stagioni (clean sheet e gol subiti solo per i portieri).

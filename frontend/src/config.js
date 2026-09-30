@@ -1,7 +1,6 @@
 // Configurazione condivisa del frontend.
-// La base URL si puo' sovrascrivere con la variabile d'ambiente VITE_API_BASE_URL.
-export const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
-).replace(/\/+$/, "");
+// I dati sono file JSON statici in public/data/ (generati da export_static.py).
+// BASE_URL di Vite rende gli URL indipendenti dal path di deploy.
+export const DATA_BASE_URL = `${import.meta.env.BASE_URL}data/`;
 
 export const PAGE_SIZE = 50;

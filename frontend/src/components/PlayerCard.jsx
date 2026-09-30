@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { formatScore, scoreTier, show } from "../format.js";
+import SeasonScore from "./SeasonScore.jsx";
 
 export default function PlayerCard({ player }) {
   const location = useLocation();
@@ -23,9 +24,12 @@ export default function PlayerCard({ player }) {
           </div>
         </dl>
       </div>
-      <div className={`card__score ${scoreTier(player.final_score)}`}>
-        <span className="score__value">{formatScore(player.final_score)}</span>
-        <span className="score__label">ASI</span>
+      <div className="scores">
+        <div className={`card__score ${scoreTier(player.final_score)}`}>
+          <span className="score__value">{formatScore(player.final_score)}</span>
+          <span className="score__label">ASI</span>
+        </div>
+        <SeasonScore season={player.last_season} score={player.last_season_score} />
       </div>
     </Link>
   );

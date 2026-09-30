@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { getPlayer } from "../api.js";
 import { ErrorMessage, Loading } from "../components/Status.jsx";
-import { DASH, formatScore, scoreTier, show } from "../format.js";
+import { DASH, formatScore, lastScoredSeason, scoreTier, seasonStartYear, show } from "../format.js";
+import SeasonScore from "../components/SeasonScore.jsx";
 
 const GOALKEEPER = "Portiere";
 
@@ -72,7 +73,11 @@ export default function PlayerProfile() {
   }
 
   const isGoalkeeper = player.position === GOALKEEPER;
-  const seasons = player.seasons || [];
+  // Dalla piu' recente: l'ordine testuale del file metterebbe "99/00" prima di "24/25".
+  const seasons = [...(player.seasons || [])].sort(
+    (a, b) => seasonStartYear(b.season) - seasonStartYear(a.season)
+  );
+  const lastSeason = lastScoredSeason(seasons);
 
   return (
     <section>
@@ -101,9 +106,16 @@ export default function PlayerProfile() {
             </div>
           </dl>
         </div>
-        <div className={`profile__score ${scoreTier(player.final_score)}`}>
-          <span className="score__value">{formatScore(player.final_score)}</span>
-          <span className="score__label">Punteggio ASI</span>
+        <div className="scores">
+          <div className={`profile__score ${scoreTier(player.final_score)}`}>
+            <span className="score__value">{formatScore(player.final_score)}</span>
+            <span className="score__label">Punteggio ASI</span>
+          </div>
+          <SeasonScore
+            season={lastSeason?.season}
+            score={lastSeason?.score}
+            className="season-score--lg"
+          />
         </div>
       </header>
 

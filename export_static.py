@@ -48,6 +48,47 @@ def calc_age(dob_str):
         return None
 
 
+def season_start_year(season):
+    """Anno di inizio stagione ('24/25' -> 2024, '99/00' -> 1999, '2024' -> 2024).
+    L'ordine alfabetico metterebbe '99/00' dopo '24/25'."""
+    head = (season or "").strip().split("/")[0]
+    if not head.isdigit() or len(head) not in (2, 4):
+        return None
+    year = int(head)
+    if len(head) == 4:
+        return year
+    return 1900 + year if year >= 50 else 2000 + year
+
+
+def last_scored_seasons(conn):
+    """{player_id: (stagione, punteggio)} dell'ultima stagione valutata. A parita'
+    di stagione (piu' competizioni) vale quella con piu' minuti. Stessa regola
+    usata dal frontend nel profilo."""
+    rows = conn.execute(
+        """
+        SELECT sc.player_id, sc.season, sc.season_score,
+               MAX(COALESCE(st.total_minutes, 0)) AS minutes
+        FROM season_scores sc
+        LEFT JOIN player_stats st
+               ON st.player_id  = sc.player_id
+              AND st.season      = sc.season
+              AND st.competition IS sc.competition
+        WHERE sc.season_score IS NOT NULL
+        GROUP BY sc.player_id, sc.season, sc.competition
+        """
+    ).fetchall()
+    best = {}
+    for r in rows:
+        year = season_start_year(r["season"])
+        if year is None:
+            continue
+        key = (year, r["minutes"])
+        pid = r["player_id"]
+        if pid not in best or key > best[pid][0]:
+            best[pid] = (key, (r["season"], round(r["season_score"], 1)))
+    return {pid: value for pid, (_, value) in best.items()}
+
+
 # ─── ESPORTAZIONI ──────────────────────────────────────────────
 
 def export_players(conn):
@@ -74,6 +115,7 @@ def export_players(conn):
         """
     ).fetchall()
 
+    last = last_scored_seasons(conn)
     players = [
         {
             "player_id": r["player_id"],
@@ -82,6 +124,8 @@ def export_players(conn):
             "age": calc_age(r["date_of_birth"]),
             "team": r["team"],
             "final_score": round(r["final_score"], 1) if r["final_score"] is not None else None,
+            "last_season": last.get(r["player_id"], (None, None))[0],
+            "last_season_score": last.get(r["player_id"], (None, None))[1],
         }
         for r in rows
     ]

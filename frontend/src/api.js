@@ -1,55 +1,73 @@
-import { API_BASE_URL } from "./config.js";
+import { DATA_BASE_URL } from "./config.js";
 
-async function request(path, { params, signal } = {}) {
-  const query = new URLSearchParams();
-  for (const [key, value] of Object.entries(params || {})) {
-    if (value !== undefined && value !== null && value !== "") {
-      query.set(key, value);
-    }
-  }
-  const qs = query.toString();
-  const url = `${API_BASE_URL}${path}${qs ? `?${qs}` : ""}`;
+// Cache a livello modulo: ogni file viene scaricato una sola volta per sessione.
+const cache = new Map();
 
+function abortError() {
+  return new DOMException("Richiesta annullata.", "AbortError");
+}
+
+async function fetchJSON(file) {
   let response;
   try {
-    response = await fetch(url, { signal, headers: { Accept: "application/json" } });
-  } catch (err) {
-    if (err.name === "AbortError") throw err;
-    throw new Error(`Impossibile contattare l'API (${API_BASE_URL}).`);
+    response = await fetch(`${DATA_BASE_URL}${file}`, {
+      headers: { Accept: "application/json" },
+    });
+  } catch {
+    throw new Error(`Impossibile caricare i dati (${file}).`);
   }
-
   if (!response.ok) {
-    let detail = "";
-    try {
-      const body = await response.json();
-      detail = typeof body?.detail === "string" ? body.detail : "";
-    } catch {
-      // corpo non JSON: ignora
-    }
-    const unreachable = [502, 503, 504].includes(response.status);
-    const error = new Error(
-      detail ||
-        (unreachable
-          ? `L'API non e' raggiungibile (errore ${response.status}). Verifica che il backend sia avviato.`
-          : `Errore ${response.status} dall'API.`)
-    );
+    const error = new Error(`Dati non disponibili (${file}, errore ${response.status}).`);
     error.status = response.status;
     throw error;
   }
-  return response.json();
+  try {
+    return await response.json();
+  } catch {
+    throw new Error(`File dati non valido (${file}). Rigenera i dati con export_static.py.`);
+  }
 }
 
-export function getRoles(options) {
-  return request("/roles", options);
+// Il download condiviso non riceve il signal del chiamante: se un componente
+// si smonta, gli altri (e la cache) devono comunque ottenere i dati.
+async function loadJSON(file, signal) {
+  if (!cache.has(file)) {
+    const promise = fetchJSON(file);
+    cache.set(file, promise);
+    promise.catch(() => cache.delete(file)); // permette il "Riprova"
+  }
+  const data = await cache.get(file);
+  if (signal?.aborted) throw abortError();
+  return data;
 }
 
-export function getPlayers({ position, search, limit, offset } = {}, options) {
-  return request("/players", {
-    ...options,
-    params: { position, search, limit, offset },
-  });
+export async function getRoles({ signal } = {}) {
+  const roles = await loadJSON("roles.json", signal);
+  return Array.isArray(roles) ? roles : [];
 }
 
-export function getPlayer(playerId, options) {
-  return request(`/players/${encodeURIComponent(playerId)}`, options);
+// Filtro e ricerca lato client; players.json e' gia' ordinato per final_score desc.
+export async function getPlayers({ position, search, limit, offset = 0 } = {}, { signal } = {}) {
+  const all = await loadJSON("players.json", signal);
+  const players = Array.isArray(all) ? all : [];
+  const query = (search || "").trim().toLowerCase();
+
+  const filtered = players.filter(
+    (p) =>
+      (!position || p.position === position) &&
+      (!query || (p.name || "").toLowerCase().includes(query))
+  );
+  return limit === undefined ? filtered.slice(offset) : filtered.slice(offset, offset + limit);
+}
+
+// profiles.json e' caricato in modo lazy alla prima apertura di un profilo.
+export async function getPlayer(playerId, { signal } = {}) {
+  const profiles = await loadJSON("profiles.json", signal);
+  const profile = profiles?.[String(playerId)];
+  if (profile === undefined) {
+    const error = new Error("Giocatore non trovato.");
+    error.status = 404;
+    throw error;
+  }
+  return profile;
 }
