@@ -1,4 +1,5 @@
 import { DATA_BASE_URL } from "./config.js";
+import { lastScoredSeason } from "./format.js";
 
 // Cache a livello modulo: ogni file viene scaricato una sola volta per sessione.
 const cache = new Map();
@@ -70,4 +71,39 @@ export async function getPlayer(playerId, { signal } = {}) {
     throw error;
   }
   return profile;
+}
+
+let lastSeasonsCache = null;
+
+// Ultima stagione valutata per ogni giocatore: Map(String(id) -> {season, score} | null).
+// Usa i campi last_season/last_season_score di players.json quando l'export li
+// contiene; con un export che non li scrive li ricava da profiles.json, con la
+// stessa regola del profilo, cosi' card e profilo mostrano sempre lo stesso valore.
+export async function getLastSeasons({ signal } = {}) {
+  if (!lastSeasonsCache) {
+    lastSeasonsCache = (async () => {
+      const players = await loadJSON("players.json");
+      const list = Array.isArray(players) ? players : [];
+      if (list.length > 0 && "last_season_score" in list[0]) {
+        return new Map(
+          list.map((p) => [
+            String(p.player_id),
+            p.last_season_score == null
+              ? null
+              : { season: p.last_season, score: p.last_season_score },
+          ])
+        );
+      }
+      const profiles = await loadJSON("profiles.json");
+      return new Map(
+        Object.entries(profiles || {}).map(([id, profile]) => [id, lastScoredSeason(profile.seasons)])
+      );
+    })();
+    lastSeasonsCache.catch(() => {
+      lastSeasonsCache = null;
+    });
+  }
+  const result = await lastSeasonsCache;
+  if (signal?.aborted) throw abortError();
+  return result;
 }

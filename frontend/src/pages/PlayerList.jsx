@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getPlayers, getRoles } from "../api.js";
+import { getLastSeasons, getPlayers, getRoles } from "../api.js";
 import { PAGE_SIZE } from "../config.js";
 import PlayerCard from "../components/PlayerCard.jsx";
 import { ErrorMessage, Loading } from "../components/Status.jsx";
@@ -18,6 +18,7 @@ export default function PlayerList() {
   const [rolesError, setRolesError] = useState(null);
 
   const [players, setPlayers] = useState([]);
+  const [lastSeasons, setLastSeasons] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
@@ -47,6 +48,15 @@ export default function PlayerList() {
       .catch((err) => {
         if (err.name !== "AbortError") setRolesError(err);
       });
+    return () => controller.abort();
+  }, []);
+
+  // Ultima stagione valutata, caricata a parte: non ritarda la comparsa delle card.
+  useEffect(() => {
+    const controller = new AbortController();
+    getLastSeasons({ signal: controller.signal })
+      .then(setLastSeasons)
+      .catch(() => {}); // senza questo dato le card mostrano solo il punteggio ASI
     return () => controller.abort();
   }, []);
 
@@ -145,7 +155,11 @@ export default function PlayerList() {
         <>
           <div className="grid">
             {players.map((player) => (
-              <PlayerCard key={player.player_id} player={player} />
+              <PlayerCard
+                key={player.player_id}
+                player={player}
+                lastSeason={lastSeasons ? lastSeasons.get(String(player.player_id)) ?? null : undefined}
+              />
             ))}
           </div>
           {error && <ErrorMessage error={error} />}
