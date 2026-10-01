@@ -125,7 +125,7 @@ h2 {
 /* Griglia card */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
 
@@ -233,6 +233,55 @@ h2 {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.8;
+}
+
+.scores {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.scores .card__score {
+  align-self: stretch;
+}
+
+.season-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.season-score__value {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.season-score__label {
+  margin-top: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.season-score--lg {
+  min-width: 72px;
+  padding: 10px;
+}
+
+.season-score--lg .season-score__value {
+  font-size: 1.5rem;
+}
+
+.season-score--lg .season-score__label {
+  font-size: 0.72rem;
 }
 
 .score--high { color: var(--high); background: var(--high-bg); }
@@ -416,7 +465,7 @@ h2 {
     flex-direction: column;
   }
 
-  .profile__score {
+  .profile .scores {
     align-self: flex-start;
   }
 }
