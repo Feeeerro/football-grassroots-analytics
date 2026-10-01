@@ -21,8 +21,18 @@ Filtro per posizione e ricerca per nome avvengono nel browser. Gli URL sono
 costruiti con `import.meta.env.BASE_URL`, quindi l'app funziona anche sotto un
 sotto-percorso (es. `npx vite build --base=/nome-repo/` per GitHub Pages).
 
-Nota: `public/data/` e' esclusa da git dalla regola `data/` del `.gitignore`
-della root, quindi i JSON vanno generati prima della build.
+I JSON in `public/data/` sono versionati (eccezione in `frontend/.gitignore`):
+dopo ogni `export_static.py` vanno committati per aggiornare il sito.
+
+## Build per GitHub Pages
+
+```bash
+npx vite build --base=/nome-repo/
+```
+
+Dopo la build (`postbuild`) `dist/index.html` viene copiato in `dist/404.html`:
+GitHub Pages serve quella pagina per i percorsi che non conosce, cosi' i link
+diretti a un profilo (es. `/players/123`) funzionano anche ricaricando la pagina.
 
 ## Avvio
 

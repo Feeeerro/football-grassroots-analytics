@@ -237,7 +237,7 @@ h2 {
 
 .scores {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 6px;
   flex-shrink: 0;
 }

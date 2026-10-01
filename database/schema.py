@@ -52,7 +52,6 @@ def create_database(dbpath):
             double_yellow_cards INTEGER,
             red_cards INTEGER,
             total_minutes INTEGER,
-            team_name TEXT,
             FOREIGN KEY (player_id) REFERENCES players(player_id),
             FOREIGN KEY (team_id) REFERENCES teams(team_id)
         );

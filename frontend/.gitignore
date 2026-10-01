@@ -6,3 +6,8 @@ dist/
 # Il .gitignore della root ignora *.json: questi vanno versionati.
 !package.json
 !package-lock.json
+
+# JSON statici generati da export_static.py: vanno versionati per il deploy
+# (la root ignora sia data/ sia *.json).
+!public/data/
+!public/data/*.json

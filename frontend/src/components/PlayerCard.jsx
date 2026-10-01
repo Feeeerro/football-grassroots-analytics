@@ -29,7 +29,10 @@ export default function PlayerCard({ player }) {
           <span className="score__value">{formatScore(player.final_score)}</span>
           <span className="score__label">ASI</span>
         </div>
-        <SeasonScore season={player.last_season} score={player.last_season_score} />
+        {/* players.json esportati prima di last_season non hanno il campo: niente riquadro */}
+        {"last_season_score" in player && (
+          <SeasonScore season={player.last_season} score={player.last_season_score} />
+        )}
       </div>
     </Link>
   );
